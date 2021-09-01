@@ -26,19 +26,22 @@ def getbookmoves(fen, moves, profundidad):
                     val_ant = stockfish.get_evaluation()['value']/100
                     stockfish.make_moves_from_current_position([parsed["moves"][i]["uci"]])
                     val_act = stockfish.get_evaluation()['value']/100
-                    is_incorrect = val_act - val_ant <= 0.7
+                    is_incorrect = abs(val_act - val_ant) >= 0.5
                     if is_incorrect:
                         board = chess.Board(fen)
                         board.push_san(parsed["moves"][i]["san"])
                         stockfish.set_fen_position(board.fen())
-                        a = stockfish.get_best_move()
+                        a = stockfish.get_best_move_time(5000)
                         print({
                             'cmove': a,
-                            'fen': board.fen(),
+                            'var': "{} - {}".format(val_ant, val_act),
+                            'fen': fen,
                             'san': parsed["moves"][i]["san"]
                         })
                         profundidad -= 1
                         getbookmoves(board.fen(), moves, profundidad)
+                    else:
+                        print(parsed["moves"][i]["san"], " - ", val_act, " - ", val_ant)
             except:
                 pass
             sleep(0.1)
@@ -46,12 +49,12 @@ def getbookmoves(fen, moves, profundidad):
 
 stockfish = Stockfish("stockfish.exe")
 stockfish.set_skill_level(20)
-stockfish.set_depth(13)
+stockfish.set_depth(20)
 stockfish.set_elo_rating(3500)
 
 fen = "rnbqkbnr/pp2pppp/3p4/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1"
-moves = 5
-profundidad = 10
+moves = 50
+profundidad = 50
 porcentaje = 0.1
 
 getbookmoves(fen, moves, profundidad)
