@@ -41,7 +41,12 @@ def getbookmoves(fen, moves, profundidad):
                         profundidad -= 1
                         getbookmoves(board.fen(), moves, profundidad)
                     else:
+                        board = chess.Board(fen)
+                        board.push_san(parsed["moves"][i]["san"])
+                        stockfish.set_fen_position(board.fen())
                         print(parsed["moves"][i]["san"], " - ", val_act, " - ", val_ant)
+                        profundidad -= 1
+                        getbookmoves(board.fen(), moves, profundidad)
             except:
                 pass
             sleep(0.1)
@@ -53,7 +58,7 @@ stockfish.set_depth(13)
 stockfish.set_elo_rating(3500)
 
 fen = "rnbqkbnr/pp2pppp/3p4/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1"
-moves = 50
+moves = 5
 profundidad = 50
 porcentaje = 0.1
 

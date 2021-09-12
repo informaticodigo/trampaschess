@@ -139,9 +139,8 @@ board_map = {
 
 
 def getbookmoves(stockfish, porcentaje=0.1, fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", moves=50, profundidad=50):
-    if profundidad <= 0:
-        print("fin linea")
-    else:
+    results = []
+    if profundidad > 0:
         params = (
             ('variant', 'standard'),
             ('recentGames', 0),
@@ -157,82 +156,83 @@ def getbookmoves(stockfish, porcentaje=0.1, fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPP
             try:
                 if parsed["moves"][i]["white"] + parsed["moves"][i]["black"] + parsed["moves"][i]["draws"] / parsed["moves"][0]["white"] + parsed["moves"][0]["black"] + parsed["moves"][0]["draws"] >= porcentaje:
                     stockfish.set_fen_position(fen)
-                    val_ant = stockfish.get_evaluation()['value']/100
+                    val_ant = stockfish.get_evaluation()['value'] / 100
                     stockfish.make_moves_from_current_position([parsed["moves"][i]["uci"]])
-                    val_act = stockfish.get_evaluation()['value']/100
+                    val_act = stockfish.get_evaluation()['value'] / 100
                     is_incorrect = abs(val_act - val_ant) >= 1
                     if is_incorrect:
                         board = chess.Board(fen)
                         board.push_san(parsed["moves"][i]["san"])
                         stockfish.set_fen_position(board.fen())
                         a = stockfish.get_best_move_time(5000)
-                        print({
+                        results.append({
                             'cmove': a,
                             'var': "{} - {}".format(val_ant, val_act),
                             'fen': fen,
                             'san': parsed["moves"][i]["san"]
                         })
                         profundidad -= 1
-                        getbookmoves(board.fen(), moves, profundidad)
+                        getbookmoves(stockfish=stockfish, fen=board.fen(), moves=moves, profundidad=profundidad)
                     else:
                         board = chess.Board(fen)
                         board.push_san(parsed["moves"][i]["san"])
                         stockfish.set_fen_position(board.fen())
-                        print(parsed["moves"][i]["san"], " - ", val_act, " - ", val_ant)
-                        getbookmoves(board.fen(), moves, profundidad)
+                        profundidad -= 1
+                        getbookmoves(stockfish=stockfish, fen=board.fen(), moves=moves, profundidad=profundidad)
             except:
                 pass
             sleep(0.1)
+    return results
 
 
 def show_board(moved=False):
     canvas_analyze.create_image(int(board_img.width / 2), int(board_img.height / 2), image=board, tags=("board",))
     if not moved:
-        canvas_analyze.create_image(w*2+w/2, h*7+h/2+3, image=b_white, tags=("bwhite", ))
-        canvas_analyze.create_image(w*5+w/2, h*7+h/2+3, image=b_white, tags=("bwhite", ))
-        canvas_analyze.create_image(w+w/2, h*7+h/2+3, image=n_white, tags=("nwhite", ))
-        canvas_analyze.create_image(w*6+w/2, h*7+h/2+3, image=n_white, tags=("nwhite", ))
-        canvas_analyze.create_image(w/2, h*7+h/2+3, image=r_white, tags=("rwhite", ))
-        canvas_analyze.create_image(w*7+w/2, h*7+h/2+3, image=r_white, tags=("rwhite", ))
-        canvas_analyze.create_image(w*3+w/2, h*7+h/2+3, image=q_white, tags=("qwhite", ))
-        canvas_analyze.create_image(w*4+w/2, h*7+h/2+3, image=k_white, tags=("kwhite", ))
-        canvas_analyze.create_image(w/2, h*6+h/2+3, image=p_white, tags=("pwhite", ))
-        canvas_analyze.create_image(w+w/2, h*6+h/2+3, image=p_white, tags=("pwhite", ))
-        canvas_analyze.create_image(w*2+w/2, h*6+h/2+3, image=p_white, tags=("pwhite", ))
-        canvas_analyze.create_image(w*3+w/2, h*6+h/2+3, image=p_white, tags=("pwhite", ))
-        canvas_analyze.create_image(w*4+w/2, h*6+h/2+3, image=p_white, tags=("pwhite", ))
-        canvas_analyze.create_image(w*5+w/2, h*6+h/2+3, image=p_white, tags=("pwhite", ))
-        canvas_analyze.create_image(w*6+w/2, h*6+h/2+3, image=p_white, tags=("pwhite", ))
-        canvas_analyze.create_image(w*7+w/2, h*6+h/2+3, image=p_white, tags=("pwhite", ))
+        canvas_analyze.create_image(w * 2 + w / 2, h * 7 + h / 2 + 3, image=b_white, tags=("bwhite",))
+        canvas_analyze.create_image(w * 5 + w / 2, h * 7 + h / 2 + 3, image=b_white, tags=("bwhite",))
+        canvas_analyze.create_image(w + w / 2, h * 7 + h / 2 + 3, image=n_white, tags=("nwhite",))
+        canvas_analyze.create_image(w * 6 + w / 2, h * 7 + h / 2 + 3, image=n_white, tags=("nwhite",))
+        canvas_analyze.create_image(w / 2, h * 7 + h / 2 + 3, image=r_white, tags=("rwhite",))
+        canvas_analyze.create_image(w * 7 + w / 2, h * 7 + h / 2 + 3, image=r_white, tags=("rwhite",))
+        canvas_analyze.create_image(w * 3 + w / 2, h * 7 + h / 2 + 3, image=q_white, tags=("qwhite",))
+        canvas_analyze.create_image(w * 4 + w / 2, h * 7 + h / 2 + 3, image=k_white, tags=("kwhite",))
+        canvas_analyze.create_image(w / 2, h * 6 + h / 2 + 3, image=p_white, tags=("pwhite",))
+        canvas_analyze.create_image(w + w / 2, h * 6 + h / 2 + 3, image=p_white, tags=("pwhite",))
+        canvas_analyze.create_image(w * 2 + w / 2, h * 6 + h / 2 + 3, image=p_white, tags=("pwhite",))
+        canvas_analyze.create_image(w * 3 + w / 2, h * 6 + h / 2 + 3, image=p_white, tags=("pwhite",))
+        canvas_analyze.create_image(w * 4 + w / 2, h * 6 + h / 2 + 3, image=p_white, tags=("pwhite",))
+        canvas_analyze.create_image(w * 5 + w / 2, h * 6 + h / 2 + 3, image=p_white, tags=("pwhite",))
+        canvas_analyze.create_image(w * 6 + w / 2, h * 6 + h / 2 + 3, image=p_white, tags=("pwhite",))
+        canvas_analyze.create_image(w * 7 + w / 2, h * 6 + h / 2 + 3, image=p_white, tags=("pwhite",))
 
-        canvas_analyze.create_image(w*2+w/2, h/2+3, image=b_black, tags=("bblack", ))
-        canvas_analyze.create_image(w*5+w/2, h/2+3, image=b_black, tags=("bblack", ))
-        canvas_analyze.create_image(w+w/2, h/2+3, image=n_black, tags=("nblack", ))
-        canvas_analyze.create_image(w*6+w/2, h/2+3, image=n_black, tags=("nblack", ))
-        canvas_analyze.create_image(w/2, h/2+3, image=r_black, tags=("rblack", ))
-        canvas_analyze.create_image(w*7+w/2, h/2+3, image=r_black, tags=("rblack", ))
-        canvas_analyze.create_image(w*3+w/2, h/2+3, image=q_black, tags=("qblack", ))
-        canvas_analyze.create_image(w*4+w/2, h/2+3, image=k_black, tags=("kblack", ))
-        canvas_analyze.create_image(w/2, h+h/2+3, image=p_black, tags=("pblack", ))
-        canvas_analyze.create_image(w+w/2, h+h/2+3, image=p_black, tags=("pblack", ))
-        canvas_analyze.create_image(w*2+w/2, h+h/2+3, image=p_black, tags=("pblack", ))
-        canvas_analyze.create_image(w*3+w/2, h+h/2+3, image=p_black, tags=("pblack", ))
-        canvas_analyze.create_image(w*4+w/2, h+h/2+3, image=p_black, tags=("pblack", ))
-        canvas_analyze.create_image(w*5+w/2, h+h/2+3, image=p_black, tags=("pblack", ))
-        canvas_analyze.create_image(w*6+w/2, h+h/2+3, image=p_black, tags=("pblack", ))
-        canvas_analyze.create_image(w*7+w/2, h+h/2+3, image=p_black, tags=("pblack", ))
+        canvas_analyze.create_image(w * 2 + w / 2, h / 2 + 3, image=b_black, tags=("bblack",))
+        canvas_analyze.create_image(w * 5 + w / 2, h / 2 + 3, image=b_black, tags=("bblack",))
+        canvas_analyze.create_image(w + w / 2, h / 2 + 3, image=n_black, tags=("nblack",))
+        canvas_analyze.create_image(w * 6 + w / 2, h / 2 + 3, image=n_black, tags=("nblack",))
+        canvas_analyze.create_image(w / 2, h / 2 + 3, image=r_black, tags=("rblack",))
+        canvas_analyze.create_image(w * 7 + w / 2, h / 2 + 3, image=r_black, tags=("rblack",))
+        canvas_analyze.create_image(w * 3 + w / 2, h / 2 + 3, image=q_black, tags=("qblack",))
+        canvas_analyze.create_image(w * 4 + w / 2, h / 2 + 3, image=k_black, tags=("kblack",))
+        canvas_analyze.create_image(w / 2, h + h / 2 + 3, image=p_black, tags=("pblack",))
+        canvas_analyze.create_image(w + w / 2, h + h / 2 + 3, image=p_black, tags=("pblack",))
+        canvas_analyze.create_image(w * 2 + w / 2, h + h / 2 + 3, image=p_black, tags=("pblack",))
+        canvas_analyze.create_image(w * 3 + w / 2, h + h / 2 + 3, image=p_black, tags=("pblack",))
+        canvas_analyze.create_image(w * 4 + w / 2, h + h / 2 + 3, image=p_black, tags=("pblack",))
+        canvas_analyze.create_image(w * 5 + w / 2, h + h / 2 + 3, image=p_black, tags=("pblack",))
+        canvas_analyze.create_image(w * 6 + w / 2, h + h / 2 + 3, image=p_black, tags=("pblack",))
+        canvas_analyze.create_image(w * 7 + w / 2, h + h / 2 + 3, image=p_black, tags=("pblack",))
     else:
         for pos in board_map.keys():
             if type(board_map[pos]) == type(8):
-                pos_w = w*cols_list.index(pos[0])+w/2
-                pos_h = h*(8-eval(pos[-1]))+h/2+3
+                pos_w = w * cols_list.index(pos[0]) + w / 2
+                pos_h = h * (8 - eval(pos[-1])) + h / 2 + 3
                 piece = pieces_ordered[board_map[pos]]
                 canvas_analyze.create_image(pos_w, pos_h, image=eval(piece), tags=(piece,))
 
 
 def canvas_clicked(event):
     global click, board_map
-    square = str(cols_list[floor(event.x/w)])+str(rows[8-ceil(event.y/h)])
+    square = str(cols_list[floor(event.x / w)]) + str(rows[8 - ceil(event.y / h)])
     if click == '':
         click = square
     else:
@@ -317,7 +317,7 @@ def reset():
 def get_board_fen():
     fen = ''
     for pos in range(0, 8):
-        row = positions[pos*8:pos*8+8]
+        row = positions[pos * 8:pos * 8 + 8]
         to_add = ''
         last_empty = False
         empty = 0
@@ -327,14 +327,14 @@ def get_board_fen():
                 last_empty = True
             else:
                 if last_empty:
-                    to_add += str(empty)+str(codes_reversed[str(board_map[cas])])
+                    to_add += str(empty) + str(codes_reversed[str(board_map[cas])])
                     last_empty = False
                     empty = 0
                 else:
                     to_add += str(codes_reversed[str(board_map[cas])])
         if empty != 0:
             to_add += str(empty)
-        fen += "/"+to_add
+        fen += "/" + to_add
     fen = fen[1:]
     fen += " "
     if turn.get() == "Turno de Blancas":
@@ -349,6 +349,18 @@ def get_board_fen():
     fen += " - 0 1"
     return fen
 
+
+def search_and_show_results():
+    fen = get_board_fen()
+    results = getbookmoves(stockfish_, fen=fen, moves=eval(ms.get()), profundidad=eval(dp.get()))
+    print(results)
+
+
+def validate_entry(P):
+    if str.isdigit(P) or P == "":
+        return True
+    else:
+        return False
 
 window = Tk()
 window.title("TrampaChess")
@@ -377,7 +389,7 @@ k_black = ImageTk.PhotoImage(file="pieces_image/kblack.png")
 k_white = ImageTk.PhotoImage(file="pieces_image/kwhite.png")
 
 canvas_analyze = Canvas(window, width=board_img.width, height=board_img.height)
-canvas_analyze.grid(row=2, column=0, columnspan=3)
+canvas_analyze.grid(row=4, column=0, columnspan=3)
 canvas_analyze.bind('<Button-1>', canvas_clicked)
 show_board()
 
@@ -390,6 +402,19 @@ turn = Combobox(window, font="Helvetica 20", state="readonly", width=44)
 turn.grid(row=1, column=0, columnspan=3)
 turn['values'] = ["Turno de Blancas", "Turno de Negras"]
 turn.set("Turno de Blancas")
+
+Label(window, font="Helvetica 20", text="Moves:").grid(row=2, column=0)
+Label(window, font="Helvetica 20", text="Depth:").grid(row=2, column=2)
+
+vcmd = (window.register(validate_entry), "%P")
+ms = Entry(window, font="Helvetica 20", validate="all", validatecommand=vcmd, width=21)
+ms.grid(row=3, column=0)
+ms.insert(0, "5")
+dp = Entry(window, font="Helvetica 20", validate="all", validatecommand=vcmd, width=21)
+dp.insert(0, "30")
+dp.grid(row=3, column=2)
+
+Button(window, width=42, text="Chercher", font="Helvetica 20", bg="red", fg="white", command=lambda: search_and_show_results()).grid(row=5, column=0, columnspan=3)
 
 # module_moves = Scale(window, font="Helvetica 15", label="Profundidad del módulo", from_=3, to=100, orient=HORIZONTAL, command=stockfish_.set_depth)
 # module_moves.place(rely=0.29, relx=0.305, relwidth=0.69)
